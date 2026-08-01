@@ -1,0 +1,203 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Pokedex API Proxy",
+    "description": "API proxy em Go que consome a PokeAPI (https://pokeapi.co/) e repassa os JSONs recebidos. Inclui endpoint de health check e esta documentação OpenAPI/Swagger.\n\n### Endpoints\n- `GET /health` - Verificação de saúde do serviço e da PokeAPI\n- `GET /api/v1/{resource}/{id}` - Proxy que repassa qualquer recurso da PokeAPI\n- `GET /docs` - Interface Swagger UI (esta página)\n\n### Exemplos de uso\n```\ncurl http://localhost:8080/api/v1/pokemon/pikachu\ncurl http://localhost:8080/api/v1/berry/1\ncurl http://localhost:8080/api/v1/pokemon?limit=5&offset=10\n```",
+    "version": "1.1.0",
+    "contact": {
+      "name": "Pokedex API Proxy",
+      "url": "https://pokeapi.co/docs/v2"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "Servidor local de desenvolvimento"
+    }
+  ],
+  "tags": [
+    { "name": "saude", "description": "Endpoint de health check" },
+    { "name": "proxy", "description": "Proxy de recursos da PokeAPI" },
+    { "name": "docs", "description": "Documentação e metadados da API" }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": ["saude"],
+        "summary": "Health check do serviço",
+        "description": "Verifica se o serviço está de pé e se a PokeAPI está acessível. Retorna 200 com status `ok` quando tudo está saudável e 503 com status `degraded` quando a PokeAPI está fora do ar.",
+        "operationId": "healthCheck",
+        "responses": {
+          "200": {
+            "description": "Serviço e PokeAPI saudáveis",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HealthResponse" }
+              }
+            }
+          },
+          "503": {
+            "description": "Serviço degradado (PokeAPI indisponível)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HealthResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/{resource}/{id}": {
+      "get": {
+        "tags": ["proxy"],
+        "summary": "Proxy de recurso da PokeAPI",
+        "description": "Encaminha a requisição para a PokeAPI e repassa o JSON original de volta, preservando status code e content type. O `resource` deve ser um recurso válido da PokeAPI (ex.: `pokemon`, `berry`, `location`, `item`) e o `id` pode ser um nome ou um número.\n\n### Exemplos\n- `GET /api/v1/pokemon/pikachu` - dados do Pikachu\n- `GET /api/v1/pokemon/1` - dados do pokemon #1\n- `GET /api/v1/berry/cheri` - dados da berry Cheri",
+        "operationId": "proxyResource",
+        "parameters": [
+          {
+            "name": "resource",
+            "in": "path",
+            "required": true,
+            "description": "Nome do recurso da PokeAPI",
+            "schema": { "type": "string", "example": "pokemon" }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Nome ou ID numérico do recurso",
+            "schema": { "type": "string", "example": "pikachu" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Limite de itens para endpoints de listagem",
+            "schema": { "type": "integer", "minimum": 1 }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "description": "Deslocamento para paginação em listagens",
+            "schema": { "type": "integer", "minimum": 0 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "JSON do recurso repassado diretamente da PokeAPI",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "description": "Qualquer recurso da PokeAPI" }
+              }
+            }
+          },
+          "400": {
+            "description": "Caminho de recurso inválido (caracteres não permitidos)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso não encontrado na PokeAPI (status repassado)",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "description": "Corpo de erro da PokeAPI" }
+              }
+            }
+          },
+          "502": {
+            "description": "Falha ao contatar a PokeAPI (rede/timeout)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/docs": {
+      "get": {
+        "tags": ["docs"],
+        "summary": "Interface Swagger UI",
+        "description": "Página HTML interativa que renderiza esta especificação OpenAPI e permite testar os endpoints.",
+        "operationId": "swaggerUI",
+        "responses": {
+          "200": {
+            "description": "Página HTML do Swagger UI",
+            "content": { "text/html": { "schema": { "type": "string" } } }
+          }
+        }
+      }
+    },
+    "/docs/openapi.json": {
+      "get": {
+        "tags": ["docs"],
+        "summary": "Especificação OpenAPI",
+        "description": "Retorna esta especificação OpenAPI 3.0 em formato JSON, útil para ferramentas de geração de clientes.",
+        "operationId": "openapiSpec",
+        "responses": {
+          "200": {
+            "description": "Especificação OpenAPI completa",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["ok", "degraded"],
+            "description": "Estado geral do serviço"
+          },
+          "version": {
+            "type": "string",
+            "description": "Versão do serviço"
+          },
+          "uptime_seconds": {
+            "type": "integer",
+            "description": "Tempo de atividade do serviço em segundos"
+          },
+          "dependencies": {
+            "type": "object",
+            "properties": {
+              "pokeapi": {
+                "type": "string",
+                "enum": ["ok", "down"],
+                "description": "Estado de disponibilidade da PokeAPI"
+              }
+            }
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Momento da verificação em UTC"
+          }
+        },
+        "required": ["status", "version", "uptime_seconds", "dependencies", "timestamp"]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Mensagem de erro legível"
+          }
+        },
+        "required": ["error"]
+      }
+    }
+  }
+}

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<!-- Página do Swagger UI embutida no binário e servida em /docs -->
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Título da aba exibido no navegador -->
+  <title>Pokedex API Proxy - Documentação</title>
+  <!-- Estilos padrão do Swagger UI carregados do CDN -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css">
+</head>
+<body>
+  <!-- Container onde o Swagger UI renderiza a documentação -->
+  <div id="swagger-ui"></div>
+  <!-- Script do Swagger UI carregado do CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+  <!-- Inicialização do Swagger UI apontando para a spec embutida -->
+  <script>
+    // Cria a instância do Swagger UI dentro do container definido.
+    window.onload = function () {
+      // Configura e inicializa a interface de documentação.
+      window.ui = SwaggerUIBundle({
+        // Carrega a especificação OpenAPI servida pelo próprio serviço.
+        url: "/docs/openapi.json",
+        // Aponta a renderização para o container da página.
+        dom_id: "#swagger-ui",
+        // Expande as rotas da documentação por padrão.
+        deepLinking: true,
+        // Mantém a operação única aberta por vez para navegação limpa.
+        persistAuthorization: true
+      });
+    };
+  </script>
+</body>
+</html>

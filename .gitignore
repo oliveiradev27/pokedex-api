@@ -1,0 +1,13 @@
+# Binários gerados pela compilação do projeto
+/bin/
+
+# Arquivos de cobertura de testes gerados pelas ferramentas Go
+coverage.out
+coverage.html
+
+# Arquivos de log locais
+*.log
+
+# Arquivos de ambiente (segredos/configurações locais)
+.env
+.env.local
