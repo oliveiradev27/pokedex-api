@@ -156,6 +156,13 @@ func (c *Client) Forward(ctx context.Context, resourcePath, rawQuery string) (*R
 			// Pula o cache e parte para a próxima tentativa.
 			continue
 		}
+		if resp.StatusCode >= 200 && resp.StatusCode < 300 && len(resp.Body) > 0 {
+			parsedBody, parseErr := ParseAndSerialize(cleanPath, resp.Body)
+			if parseErr != nil {
+				return nil, parseErr
+			}
+			resp.Body = parsedBody
+		}
 
 		// Resposta válida obtida: armazena no cache quando é 2xx.
 		if c.cache != nil && resp.StatusCode >= 200 && resp.StatusCode < 300 {

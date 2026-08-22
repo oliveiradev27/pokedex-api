@@ -4,6 +4,7 @@ package pokeapi
 
 import (
 	"context"           // Contextos de cancelamento nos testes
+	"encoding/json"     // Parsing do modelo Pokemon nos testes
 	"io"                // Destino de descarte do log
 	"log/slog"          // Logger descartável (io.Discard)
 	"net/http"          // Criação de handlers do servidor fake
@@ -50,8 +51,49 @@ func TestForwardSuccess(t *testing.T) {
 		t.Errorf("ContentType = %q", resp.ContentType)
 	}
 	// Verifica o corpo repassado da resposta fake.
-	if string(resp.Body) != body {
-		t.Errorf("Body = %q; esperado %q", resp.Body, body)
+	var parsed Pokemon
+	if err := json.Unmarshal(resp.Body, &parsed); err != nil || parsed.ID != 25 || parsed.Name != "pikachu" {
+		t.Errorf("Body não foi convertido para Pokemon: %q", resp.Body)
+	}
+}
+
+func TestParseAndSerializePokemon(t *testing.T) {
+	body := []byte(`{"id":25,"name":"pikachu","height":4,"weight":60,"types":[{"slot":1,"type":{"name":"electric","url":"https://pokeapi.co/api/v2/type/13/"}}]}`)
+	got, err := ParseAndSerialize("pokemon/pikachu", body)
+	if err != nil {
+		t.Fatalf("ParseAndSerialize() retornou erro: %v", err)
+	}
+	var pokemon Pokemon
+	if err := json.Unmarshal(got, &pokemon); err != nil {
+		t.Fatalf("JSON serializado inválido: %v", err)
+	}
+	if pokemon.ID != 25 || pokemon.Name != "pikachu" || len(pokemon.Types) != 1 {
+		t.Fatalf("pokemon parseado incorretamente: %+v", pokemon)
+	}
+}
+
+func TestParseAndSerializeRejectsInvalidJSON(t *testing.T) {
+	if _, err := ParseAndSerialize("pokemon/1", []byte(`{invalid`)); err == nil {
+		t.Fatal("esperava erro para JSON inválido")
+	}
+}
+
+func TestParseAndSerializeBerryAndItem(t *testing.T) {
+	berry, err := ParseAndSerialize("berry/cheri", []byte(`{"id":1,"name":"cheri","growth_time":3}`))
+	if err != nil {
+		t.Fatalf("berry: %v", err)
+	}
+	var gotBerry Berry
+	if err := json.Unmarshal(berry, &gotBerry); err != nil || gotBerry.Name != "cheri" || gotBerry.ID != 1 {
+		t.Fatalf("berry inválida: %s", berry)
+	}
+	item, err := ParseAndSerialize("item/potion", []byte(`{"id":17,"name":"potion","cost":300}`))
+	if err != nil {
+		t.Fatalf("item: %v", err)
+	}
+	var gotItem Item
+	if err := json.Unmarshal(item, &gotItem); err != nil || gotItem.Name != "potion" || gotItem.Cost != 300 {
+		t.Fatalf("item inválido: %s", item)
 	}
 }
 

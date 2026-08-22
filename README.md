@@ -6,7 +6,7 @@ A simple yet robust API proxy written in Go, designed to consume the [PokeAPI](h
 
 ## 🚀 Features
 
-*   **PokeAPI Proxy:** Transparently forwards requests to the official PokeAPI, serving JSON responses directly. Supports resource lookups (e.g., `/api/v1/pokemon/pikachu`) and paginated lists (e.g., `/api/v1/pokemon?limit=5`).
+*   **PokeAPI Proxy:** Forwards requests to the official PokeAPI after parsing successful JSON responses into Go structs (`Pokemon`, `Berry` and `Item`) and serializing them again. Supports resource lookups (e.g., `/api/v1/pokemon/pikachu`) and paginated lists (e.g., `/api/v1/pokemon?limit=5`).
 *   **Health Check:** A `/health` endpoint provides service status and verifies the availability of the PokeAPI dependency.
 *   **OpenAPI/Swagger Documentation:** An OpenAPI 3.0 specification is available at `/docs/openapi.json`, and an interactive Swagger UI can be accessed at `/docs`.
 *   **In-Memory Cache:** Caches 2xx responses from the PokeAPI with configurable TTL and limits to reduce load on the upstream API. Supports thread-safe access and lazy eviction of expired entries.

@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Pokedex API Proxy",
-    "description": "API proxy em Go que consome a PokeAPI (https://pokeapi.co/) e repassa os JSONs recebidos. Inclui endpoint de health check e esta documentação OpenAPI/Swagger.\n\n### Endpoints\n- `GET /health` - Verificação de saúde do serviço e da PokeAPI\n- `GET /api/v1/{resource}/{id}` - Proxy que repassa qualquer recurso da PokeAPI\n- `GET /docs` - Interface Swagger UI (esta página)\n\n### Exemplos de uso\n```\ncurl http://localhost:8080/api/v1/pokemon/pikachu\ncurl http://localhost:8080/api/v1/berry/1\ncurl http://localhost:8080/api/v1/pokemon?limit=5&offset=10\n```",
+    "description": "API proxy em Go que consome a PokeAPI (https://pokeapi.co/), desserializa as respostas JSON em structs Go e as serializa novamente.\n\n### Exemplos de uso\n```\ncurl http://localhost:8080/api/v1/pokemon/pikachu\ncurl http://localhost:8080/api/v1/pokemon/25\ncurl \"http://localhost:8080/api/v1/pokemon?limit=5&offset=10\"\ncurl http://localhost:8080/api/v1/berry/cheri\n```",
     "version": "1.1.0",
     "contact": {
       "name": "Pokedex API Proxy",
@@ -92,7 +92,19 @@
             "description": "JSON do recurso repassado diretamente da PokeAPI",
             "content": {
               "application/json": {
-                "schema": { "type": "object", "description": "Qualquer recurso da PokeAPI" }
+                "schema": {
+                  "oneOf": [
+                    { "$ref": "#/components/schemas/Pokemon" },
+                    { "$ref": "#/components/schemas/Berry" },
+                    { "$ref": "#/components/schemas/Item" }
+                  ]
+                },
+                "examples": {
+                  "pikachu": {
+                    "summary": "Recurso Pokemon parseado e serializado",
+                    "value": { "id": 25, "name": "pikachu", "height": 4, "weight": 60, "types": [{ "slot": 1, "type": { "name": "electric", "url": "https://pokeapi.co/api/v2/type/13/" } }] }
+                  }
+                }
               }
             }
           },
@@ -197,6 +209,68 @@
           }
         },
         "required": ["error"]
+      },
+      "NamedResource": {
+        "type": "object",
+        "properties": { "name": { "type": "string" }, "url": { "type": "string", "format": "uri" } }
+      },
+      "PokemonType": {
+        "type": "object",
+        "properties": { "slot": { "type": "integer" }, "type": { "$ref": "#/components/schemas/NamedResource" } }
+      },
+      "PokemonStat": {
+        "type": "object",
+        "properties": { "base_stat": { "type": "integer" }, "effort": { "type": "integer" }, "stat": { "$ref": "#/components/schemas/NamedResource" } }
+      },
+      "Pokemon": {
+        "type": "object",
+        "description": "Recurso Pokemon após json.Unmarshal em structs Go e json.Marshal novamente.",
+        "required": ["id", "name", "height", "weight", "types"],
+        "properties": {
+          "id": { "type": "integer", "example": 25 },
+          "name": { "type": "string", "example": "pikachu" },
+          "base_experience": { "type": "integer" },
+          "height": { "type": "integer", "example": 4 },
+          "weight": { "type": "integer", "example": 60 },
+          "types": { "type": "array", "items": { "$ref": "#/components/schemas/PokemonType" } },
+          "stats": { "type": "array", "items": { "$ref": "#/components/schemas/PokemonStat" } },
+          "abilities": { "type": "array", "items": { "type": "object" } },
+          "moves": { "type": "array", "items": { "type": "object" } },
+          "sprites": { "type": "object", "additionalProperties": true },
+          "species": { "$ref": "#/components/schemas/NamedResource" },
+          "forms": { "type": "array", "items": { "$ref": "#/components/schemas/NamedResource" } }
+        }
+      },
+      "Berry": {
+        "type": "object",
+        "description": "Recurso Berry convertido por structs Go.",
+        "properties": {
+          "id": { "type": "integer", "example": 1 },
+          "name": { "type": "string", "example": "cheri" },
+          "growth_time": { "type": "integer" },
+          "max_harvest": { "type": "integer" },
+          "size": { "type": "integer" },
+          "smoothness": { "type": "integer" },
+          "soil_dryness": { "type": "integer" },
+          "item": { "$ref": "#/components/schemas/NamedResource" },
+          "firmness": { "$ref": "#/components/schemas/NamedResource" },
+          "natural_gift_type": { "$ref": "#/components/schemas/NamedResource" },
+          "flavors": { "type": "array", "items": { "type": "object" } }
+        }
+      },
+      "Item": {
+        "type": "object",
+        "description": "Recurso Item convertido por structs Go.",
+        "properties": {
+          "id": { "type": "integer", "example": 17 },
+          "name": { "type": "string", "example": "potion" },
+          "cost": { "type": "integer", "example": 300 },
+          "category": { "$ref": "#/components/schemas/NamedResource" },
+          "attributes": { "type": "array", "items": { "$ref": "#/components/schemas/NamedResource" } },
+          "effect_entries": { "type": "array", "items": { "type": "object" } },
+          "flavor_text_entries": { "type": "array", "items": { "type": "object" } },
+          "sprites": { "type": "object", "properties": { "default": { "type": "string", "format": "uri" } } }
+        }
       }
     }
   }
