@@ -28,6 +28,7 @@
 | `cmd/api/main_test.go` | Testes do entry point, incluindo ciclo de vida real via SIGTERM | — |
 | `internal/config/config.go` | Leitura de env vars com defaults e validação | 100% |
 | `internal/pokeapi/client.go` | Cliente HTTP da PokeAPI: `Forward` (proxy com retentativas) e `Ping` | 95.6% |
+| `internal/pokeapi/models.go` | Structs didáticas de `Pokemon`, `Berry`, `Item` e parse/serialização JSON | — |
 | `internal/pokeapi/cache.go` | Cache TTL thread-safe em memória (RWMutex) | — |
 | `internal/httpserver/router.go` | Monta o `ServeMux` (Go 1.22 patterns) + cadeia de middlewares | 98.9% |
 | `internal/httpserver/handlers.go` | Handlers de índice, proxy (`/api/v1/{path...}`) e docs | — |
@@ -133,6 +134,12 @@
 - `Client.Forward` agora registra `Debug("cache miss", ...)` além do `cache hit`,
   para observabilidade da taxa de acerto e do tráfego real à PokeAPI.
 - **Achado de auditoria (severidade baixa)** do agente `da2b3005`.
+
+### D15. Parse e serialização didáticos dos recursos
+- Respostas 2xx são desserializadas e serializadas novamente antes de sair do cliente.
+- `pokemon/{id|name}`, `berry/{id|name}` e `item/{id|name}` usam structs e tipos
+  aninhados; outros JSONs usam uma árvore genérica para manter o proxy abrangente.
+- Respostas 4xx/5xx permanecem verbatim e corpos vazios não são transformados.
 
 ---
 

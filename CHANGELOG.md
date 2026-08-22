@@ -9,9 +9,11 @@
 ## 1. O que é este projeto
 
 API proxy escrita em **Go** que consome a [PokeAPI](https://pokeapi.co/docs/v2) e
-**repassa os JSONs recebidos** sem transformá-los. Inclui:
+**processa os JSONs recebidos com structs Go e os serializa novamente**. Inclui:
 
 - **Proxy pass-through** de qualquer recurso da PokeAPI (`/api/v1/{resource}/{id}`).
+- **Modelos Go didáticos**: respostas JSON são desserializadas em structs (com schema
+  explícito para `Pokemon`, `Berry` e `Item`) e serializadas novamente antes de serem devolvidas.
 - **Endpoint de health check** (`/health`) com verificação da dependência externa.
 - **Documentação OpenAPI 3.0** servida em `/docs/openapi.json` + **Swagger UI** em `/docs`.
 - **Cache em memória** com TTL, **retentativas** em falhas 5xx e **graceful shutdown**.
@@ -160,6 +162,7 @@ curl http://localhost:8080/health
 
 # Proxy: dados do Pikachu
 curl http://localhost:8080/api/v1/pokemon/pikachu
+curl http://localhost:8080/api/v1/pokemon/25
 
 # Proxy: listagem paginada
 curl "http://localhost:8080/api/v1/pokemon?limit=5&offset=10"

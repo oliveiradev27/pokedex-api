@@ -51,6 +51,15 @@ func TestOpenAPISpecHasHealthPath(t *testing.T) {
 	if !strings.Contains(spec, `"/api/v1/{resource}/{id}"`) {
 		t.Error("rota /api/v1/{resource}/{id} ausente na especificação")
 	}
+	if !strings.Contains(spec, `"Pokemon"`) {
+		t.Error("schema Pokemon ausente na especificação")
+	}
+	if !strings.Contains(spec, `"Berry"`) || !strings.Contains(spec, `"Item"`) {
+		t.Error("schemas Berry/Item ausentes na especificação")
+	}
+	if !strings.Contains(spec, "curl http://localhost:8080/api/v1/pokemon/pikachu") {
+		t.Error("exemplo de request ausente")
+	}
 }
 
 // TestSpecVersion valida o acesso à versão declarada da especificação.
